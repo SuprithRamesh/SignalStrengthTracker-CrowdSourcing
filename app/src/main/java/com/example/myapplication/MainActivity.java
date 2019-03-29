@@ -2,12 +2,14 @@ package com.example.myapplication;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -20,8 +22,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -34,13 +39,15 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TelephonyManager telephonyManager;
+    Map<String, Number> mHashMap;
+
     int dbm;
     public double latitude = 0.0;
     public double longitude = 0.0;
     TextView textView;
     Button mStart;
     Button mStop;
+    Button mMapsButton;
     SignalStrength signalStrength;
     private StringBuilder text = new StringBuilder();
     BufferedReader reader = null;
@@ -78,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
 
         mStart = findViewById(R.id.create);
         mStop = findViewById(R.id.stop);
+        mMapsButton = findViewById(R.id.mapsButton);
         textView = findViewById(R.id.textView);
 
         baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -96,6 +104,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 stopRecorder();
+            }
+        });
+
+        mMapsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, MapsActivity.class);
+                startActivity(intent);
             }
         });
     }
@@ -165,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
             }
             lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 30000, 5000, locationListener);
 
-            telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+            TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
                 signalStrength = telephonyManager.getSignalStrength();
@@ -246,7 +262,6 @@ public class MainActivity extends AppCompatActivity {
 
                         mDatabase.push().setValue(dbValuesHash);
                     }
-
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -275,6 +290,7 @@ public class MainActivity extends AppCompatActivity {
             public void onProviderDisabled(String provider) {
             }
         };
+
     }
 
 

@@ -28,6 +28,12 @@
                 android:layout_height="wrap_content"
                 android:text="@string/Stop"
                 android:textColor="@android:color/white"/>
+            <Button
+                android:id="@+id/mapsButton"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/mapsButton"
+                android:textColor="@android:color/white"/>
         </TableRow>
     </TableLayout>
 

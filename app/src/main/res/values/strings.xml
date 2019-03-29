@@ -2,6 +2,7 @@
     <string name="app_name">gsm</string>
     <string name="create">create</string>
     <string name="Start">Start</string>
-    <string name="Stop">Stop</string>TextView
+    <string name="Stop">Stop</string>
+    <string name="mapsButton">Local Maps</string>
     <string name="TextView">Readings will be shown Here</string>
 </resources>
