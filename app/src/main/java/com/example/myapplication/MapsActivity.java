@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -57,13 +58,14 @@ public class MapsActivity extends FragmentActivity
     // The geographical location where the device is currently located. That is, the last-known
     // location retrieved by the Fused Location Provider.
     private Location mLastKnownLocation;
-
+    TileOverlay mOverlay;
     // Keys for storing activity state.
     private static final String KEY_CAMERA_POSITION = "camera_position";
     private static final String KEY_LOCATION = "location";
 
     ArrayList<LatLng> list = new ArrayList<>();
     WeightedLatLng heatMapValue;
+
     ArrayList<WeightedLatLng> weightedLatLngs = new ArrayList<>();
     ArrayList<WeightedLatLng> uniqueWeightedLatLngs = new ArrayList<>();
 
@@ -277,33 +279,42 @@ public class MapsActivity extends FragmentActivity
 
     private void addHeatMap() {
 
-        //uniqueWeightedLatLngs = new ArrayList(weightedLatLngs.subList(1000,2000));
-        TileProvider mProvider = new HeatmapTileProvider.Builder()
-                .weightedData(weightedLatLngs)
-                .build();
-        TileOverlay mTileOVerlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
-
-        int startIndexValue = Integer.parseInt(heatmapStartIndex.getText().toString());
-        int stopIndexValue = Integer.parseInt(heatmapStopIndex.getText().toString());
-
-        if(startIndexValue<stopIndexValue && stopIndexValue < list.size())
+        if(mOverlay!=null)
         {
-            if(stopIndexValue-startIndexValue > 1000)
+            mOverlay.remove();
+        }
+
+        int startIndexValue = -1;
+        int stopIndexValue = -1;
+
+        if(!TextUtils.isEmpty(heatmapStartIndex.getText()) || !TextUtils.isEmpty(heatmapStopIndex.getText())) {
+            startIndexValue = Integer.parseInt(heatmapStartIndex.getText().toString());
+            stopIndexValue = Integer.parseInt(heatmapStopIndex.getText().toString());
+
+            if (startIndexValue < stopIndexValue && stopIndexValue < list.size()) {
+                if (stopIndexValue - startIndexValue > 1000) {
+                    Toast.makeText(getApplicationContext(), "Index>1000. Application takes long time to load",
+                            Toast.LENGTH_LONG).show();
+                }
+                uniqueWeightedLatLngs.addAll(weightedLatLngs.subList(startIndexValue,stopIndexValue));
+                TileProvider mProvider = new HeatmapTileProvider.Builder()
+                        .weightedData(uniqueWeightedLatLngs)
+                        .opacity(1.0)
+                        .build();
+                mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
+
+            }
+            else
             {
-                Toast.makeText(getApplicationContext(),"Index>1000. Application takes long time to load",
+                Toast.makeText(getApplicationContext(),"Enter correct Index",
                         Toast.LENGTH_LONG).show();
             }
-
         }
         else
         {
-            Toast.makeText(getApplicationContext(),"Enter correct Index",
+            Toast.makeText(getApplicationContext(),"Unable to get indexes",
                     Toast.LENGTH_LONG).show();
         }
-
-
-
-
 
     }
 
