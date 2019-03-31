@@ -9,12 +9,12 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Handler;
-import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -22,11 +22,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.FirebaseApp;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -38,8 +35,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
-
-    Map<String, Number> mHashMap;
 
     int dbm;
     public double latitude = 0.0;
@@ -87,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
         mStop = findViewById(R.id.stop);
         mMapsButton = findViewById(R.id.mapsButton);
         textView = findViewById(R.id.textView);
-
+        textView.setMovementMethod(new ScrollingMovementMethod());
         baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
         fileName = "GSMStrength.csv";
         filePath = baseDir + File.separator + fileName;
@@ -131,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
                     public void run() {
                         while (t != null) {
                             try {
-                                Thread.sleep(5000);
+                                Thread.sleep(1000);
                                 Log.i("Noise", "Tock");
                             } catch (InterruptedException e) {
                                 Toast.makeText(getApplicationContext(),e.toString(), Toast.LENGTH_LONG).show();

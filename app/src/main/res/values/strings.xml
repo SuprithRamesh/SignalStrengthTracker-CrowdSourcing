@@ -3,6 +3,6 @@
     <string name="create">create</string>
     <string name="Start">Start</string>
     <string name="Stop">Stop</string>
-    <string name="mapsButton">Local Maps</string>
+    <string name="mapsButton"> Maps Activity</string>
     <string name="TextView">Readings will be shown Here</string>
 </resources>

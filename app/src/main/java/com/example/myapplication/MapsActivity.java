@@ -1,5 +1,6 @@
 package com.example.myapplication;
 
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
@@ -10,6 +11,8 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -63,7 +66,12 @@ public class MapsActivity extends FragmentActivity
     WeightedLatLng heatMapValue;
     ArrayList<WeightedLatLng> weightedLatLngs = new ArrayList<>();
     ArrayList<WeightedLatLng> uniqueWeightedLatLngs = new ArrayList<>();
+
     Button mLoadHeatmapButton;
+    Button mLoadCellTowers;
+    TextView indexTextView;
+    EditText heatmapStartIndex;
+    EditText heatmapStopIndex;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,11 +96,23 @@ public class MapsActivity extends FragmentActivity
         }
 
         mLoadHeatmapButton = findViewById(R.id.button_loadHeatMap);
+        mLoadCellTowers = findViewById(R.id.button_loadTowers);
+        indexTextView = findViewById(R.id.indexTextView);
+        heatmapStartIndex = findViewById(R.id.startIndex);
+        heatmapStopIndex = findViewById(R.id.stopIndex);
+
         mLoadHeatmapButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), list.toString(), Toast.LENGTH_LONG).show();
+                //Load the HeatMap based on Index Values
                 addHeatMap();
+            }
+        });
+
+        mLoadCellTowers.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
             }
         });
     }
@@ -126,8 +146,9 @@ public class MapsActivity extends FragmentActivity
         // Get the current location of the device and set the position of the map.
         getDeviceLocation();
 
-        ///loadValues
+        ///load the Firebase Values locally
         loadValuesFromFirebase();
+
     }
 
     /**
@@ -232,10 +253,9 @@ public class MapsActivity extends FragmentActivity
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
         mDatabase.addValueEventListener(new ValueEventListener() {
+            @SuppressLint({"NewApi", "SetTextI18n"})
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                final long[] pendingLoadCount = { snapshot.getChildrenCount() };
-                /*Toast.makeText(getApplicationContext(), snapshot.getValue().toString(), Toast.LENGTH_LONG).show();*/
                 for (DataSnapshot postSnapshot: snapshot.getChildren()) {
                     Object latitude = postSnapshot.child("latitude").getValue(Object.class);
                     Object longitude = postSnapshot.child("longitude").getValue(Object.class);
@@ -244,11 +264,8 @@ public class MapsActivity extends FragmentActivity
                     list.add(latLng);
                     heatMapValue = new WeightedLatLng(latLng, Double.parseDouble(Objects.requireNonNull(dbm).toString()));
                     weightedLatLngs.add(heatMapValue);
-
                 }
-
-                //Toast.makeText(getApplicationContext(), ""+ Arrays.toString(pendingLoadCount), Toast.LENGTH_LONG).show();
-                Toast.makeText(getApplicationContext(), ""+ uniqueWeightedLatLngs.size(), Toast.LENGTH_LONG).show();
+                indexTextView.setText(Integer.toString(list.size()));
             }
 
             @Override
@@ -260,17 +277,33 @@ public class MapsActivity extends FragmentActivity
 
     private void addHeatMap() {
 
-        if(list!=null)
+        //uniqueWeightedLatLngs = new ArrayList(weightedLatLngs.subList(1000,2000));
+        TileProvider mProvider = new HeatmapTileProvider.Builder()
+                .weightedData(weightedLatLngs)
+                .build();
+        TileOverlay mTileOVerlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
+
+        int startIndexValue = Integer.parseInt(heatmapStartIndex.getText().toString());
+        int stopIndexValue = Integer.parseInt(heatmapStopIndex.getText().toString());
+
+        if(startIndexValue<stopIndexValue && stopIndexValue < list.size())
         {
-            TileProvider mProvider = new HeatmapTileProvider.Builder()
-                    .weightedData(weightedLatLngs)
-                    .build();
-            TileOverlay mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
+            if(stopIndexValue-startIndexValue > 1000)
+            {
+                Toast.makeText(getApplicationContext(),"Index>1000. Application takes long time to load",
+                        Toast.LENGTH_LONG).show();
+            }
+
         }
         else
         {
-            Toast.makeText(getApplicationContext(),"List not ready yet",Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(),"Enter correct Index",
+                    Toast.LENGTH_LONG).show();
         }
+
+
+
+
 
     }
 

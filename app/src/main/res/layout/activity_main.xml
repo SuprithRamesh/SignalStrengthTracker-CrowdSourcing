@@ -11,7 +11,8 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:stretchColumns="0,1">
+        android:stretchColumns="0,1"
+        android:id="@+id/tableLayout">
         <TableRow
             android:layout_width="fill_parent"
             android:layout_height="wrap_content">
@@ -28,20 +29,23 @@
                 android:layout_height="wrap_content"
                 android:text="@string/Stop"
                 android:textColor="@android:color/white"/>
+
+        </TableRow>
             <Button
                 android:id="@+id/mapsButton"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/mapsButton"
-                android:textColor="@android:color/white"/>
-        </TableRow>
+                android:textColor="@android:color/white" />
     </TableLayout>
 
     <TextView
         android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:scrollbars="vertical"
         android:text="@string/TextView"
-        android:textColor="#fff"/>
+        android:textColor="#fff"
+        android:layout_above="@id/tableLayout"/>
 
 </RelativeLayout>

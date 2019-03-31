@@ -12,13 +12,63 @@
     android:name="com.google.android.gms.maps.SupportMapFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MapsActivity" />
+    tools:context=".MapsActivity"
+    android:layout_above="@id/tableLayout"/>
 
-    <Button
-        android:id="@+id/button_loadHeatMap"
-        android:layout_width="match_parent"
+    <TableLayout
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:text="Load Heatmap" />
+        android:stretchColumns="1"
+        android:id="@+id/tableLayout">
+        <TableRow
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/white">
+            <TextView
+                android:id="@+id/heatMapTextView"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Enter the Range |||| Available Range --->"
+                android:textColor="#000"/>
+            <TextView
+                android:id="@+id/indexTextView"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Wait for index to Load"
+                android:textColor="#000"/>
+        </TableRow>
+        <TableRow
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/white">
+            <EditText
+                android:id="@+id/startIndex"
+                android:layout_height="wrap_content"
+                android:layout_width="0dip"
+                android:layout_weight="1"
+                android:hint="Start Index"
+                android:inputType="number"/>
+            <EditText
+                android:id="@+id/stopIndex"
+                android:layout_height="wrap_content"
+                android:layout_width="0dip"
+                android:layout_weight="1"
+                android:hint="Stop Index"
+                android:inputType="number"/>
+        </TableRow>
+            <Button
+                android:id="@+id/button_loadHeatMap"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Load Heatmap" />
+        <Button
+            android:id="@+id/button_loadTowers"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Load Towers" />
 
+    </TableLayout>
 </RelativeLayout>
