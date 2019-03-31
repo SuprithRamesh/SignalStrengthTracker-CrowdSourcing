@@ -23,6 +23,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.android.gms.maps.model.TileProvider;
@@ -36,7 +37,10 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
 import com.google.maps.android.heatmaps.WeightedLatLng;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class MapsActivity extends FragmentActivity
@@ -114,7 +118,7 @@ public class MapsActivity extends FragmentActivity
         mLoadCellTowers.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                plotCellTower();
             }
         });
     }
@@ -315,6 +319,55 @@ public class MapsActivity extends FragmentActivity
             Toast.makeText(getApplicationContext(),"Unable to get indexes",
                     Toast.LENGTH_LONG).show();
         }
+
+    }
+
+    public void plotCellTower(){
+        try
+        {
+        InputStreamReader is = new InputStreamReader(getAssets().open("DublinTowers.csv"));
+        BufferedReader reader = new BufferedReader(is);
+
+        List<LatLng> latLngList = new ArrayList<LatLng>();
+        List<String> siteList = new ArrayList<>();
+
+        double latitude;
+        double longitude;
+        String towerType = null;
+        String info = "";
+
+        int flag = 0;
+        while ((info = reader.readLine()) != null ) {
+            String[] line = info.split(",");
+
+            latitude = Double.parseDouble(line[2]);
+            longitude = Double.parseDouble(line[1]);
+            towerType = String.valueOf(line[0]);
+            Toast.makeText(getApplicationContext(),towerType,Toast.LENGTH_LONG).show();
+            if(towerType.equals("GSM"))
+            {
+                Toast.makeText(getApplicationContext(),"INSIDE",Toast.LENGTH_LONG).show();
+                positionSite(new LatLng(latitude, longitude),towerType);
+            }
+            flag++;
+        }
+
+
+
+    }
+    catch (Exception e){
+            Log.d("Exception", e.toString());
+    }
+    }
+
+
+    public void positionSite(LatLng towerLatLong, String siteName) {
+        MarkerOptions options = new MarkerOptions()
+                .title(siteName)
+                .position(towerLatLong);
+
+
+        mMap.addMarker(options);
 
     }
 
