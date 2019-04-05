@@ -22,7 +22,9 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
@@ -43,6 +45,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@SuppressWarnings("ALL")
 public class MapsActivity extends FragmentActivity
         implements OnMapReadyCallback {
 
@@ -78,6 +81,9 @@ public class MapsActivity extends FragmentActivity
     TextView indexTextView;
     EditText heatmapStartIndex;
     EditText heatmapStopIndex;
+
+    List<LatLng> point = new ArrayList<LatLng>();
+    List<LatLng> finalPoint = new ArrayList<LatLng>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -175,7 +181,7 @@ public class MapsActivity extends FragmentActivity
                             // Set the map's camera position to the current location of the device.
                             mLastKnownLocation = task.getResult();
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                                    new LatLng(Objects.requireNonNull(mLastKnownLocation).getLatitude(),
+                                    new LatLng(mLastKnownLocation.getLatitude(),
                                             mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
                         } else {
                             Log.d(TAG, "Current location is null. Using defaults.");
@@ -187,7 +193,7 @@ public class MapsActivity extends FragmentActivity
                     }
                 });
             }
-        } catch (SecurityException e)  {
+        } catch (SecurityException e) {
             Log.e("Exception: %s", e.getMessage());
         }
     }
@@ -248,13 +254,12 @@ public class MapsActivity extends FragmentActivity
                 mLastKnownLocation = null;
                 getLocationPermission();
             }
-        } catch (SecurityException e)  {
+        } catch (SecurityException e) {
             Log.e("Exception: %s", e.getMessage());
         }
     }
 
-    public void loadValuesFromFirebase()
-    {
+    public void loadValuesFromFirebase() {
         DatabaseReference mDatabase;
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
@@ -262,11 +267,11 @@ public class MapsActivity extends FragmentActivity
             @SuppressLint({"NewApi", "SetTextI18n"})
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                for (DataSnapshot postSnapshot: snapshot.getChildren()) {
+                for (DataSnapshot postSnapshot : snapshot.getChildren()) {
                     Object latitude = postSnapshot.child("latitude").getValue(Object.class);
                     Object longitude = postSnapshot.child("longitude").getValue(Object.class);
                     Object dbm = postSnapshot.child("dbm").getValue(Object.class);
-                    LatLng latLng = new LatLng(Double.parseDouble(Objects.requireNonNull(latitude).toString()),Double.parseDouble(Objects.requireNonNull(longitude).toString()));
+                    LatLng latLng = new LatLng(Double.parseDouble(Objects.requireNonNull(latitude).toString()), Double.parseDouble(Objects.requireNonNull(longitude).toString()));
                     list.add(latLng);
                     heatMapValue = new WeightedLatLng(latLng, Double.parseDouble(Objects.requireNonNull(dbm).toString()));
                     weightedLatLngs.add(heatMapValue);
@@ -283,15 +288,14 @@ public class MapsActivity extends FragmentActivity
 
     private void addHeatMap() {
 
-        if(mOverlay!=null)
-        {
+        if (mOverlay != null) {
             mOverlay.remove();
         }
 
         int startIndexValue = -1;
         int stopIndexValue = -1;
 
-        if(!TextUtils.isEmpty(heatmapStartIndex.getText()) || !TextUtils.isEmpty(heatmapStopIndex.getText())) {
+        if (!TextUtils.isEmpty(heatmapStartIndex.getText()) || !TextUtils.isEmpty(heatmapStopIndex.getText())) {
             startIndexValue = Integer.parseInt(heatmapStartIndex.getText().toString());
             stopIndexValue = Integer.parseInt(heatmapStopIndex.getText().toString());
 
@@ -300,75 +304,102 @@ public class MapsActivity extends FragmentActivity
                     Toast.makeText(getApplicationContext(), "Index>1000. Application takes long time to load",
                             Toast.LENGTH_LONG).show();
                 }
-                uniqueWeightedLatLngs.addAll(weightedLatLngs.subList(startIndexValue,stopIndexValue));
+                uniqueWeightedLatLngs.addAll(weightedLatLngs.subList(startIndexValue, stopIndexValue));
                 TileProvider mProvider = new HeatmapTileProvider.Builder()
                         .weightedData(uniqueWeightedLatLngs)
                         .opacity(1.0)
                         .build();
                 mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
 
-            }
-            else
-            {
-                Toast.makeText(getApplicationContext(),"Enter correct Index",
+            } else {
+                Toast.makeText(getApplicationContext(), "Enter correct Index",
                         Toast.LENGTH_LONG).show();
             }
-        }
-        else
-        {
-            Toast.makeText(getApplicationContext(),"Unable to get indexes",
+        } else {
+            Toast.makeText(getApplicationContext(), "Unable to get indexes",
                     Toast.LENGTH_LONG).show();
         }
 
     }
 
-    public void plotCellTower(){
-        try
-        {
-        InputStreamReader is = new InputStreamReader(getAssets().open("DublinTowers.csv"));
-        BufferedReader reader = new BufferedReader(is);
+    public void plotCellTower() {
+        try {
+            InputStreamReader is = new InputStreamReader(getAssets().open("DublinTowers.csv"));
+            BufferedReader reader = new BufferedReader(is);
 
-        List<LatLng> latLngList = new ArrayList<LatLng>();
-        List<String> siteList = new ArrayList<>();
+            List<LatLng> latLngList = new ArrayList<LatLng>();
+            List<String> siteList = new ArrayList<>();
 
-        double latitude;
-        double longitude;
-        String towerType = null;
-        String info = "";
+            double latitude;
+            double longitude;
+            String towerType = null;
+            String info = "";
 
-        int flag = 0;
-        while ((info = reader.readLine()) != null ) {
-            String[] line = info.split(",");
+            LatLngBounds curScreen = mMap.getProjection()
+                    .getVisibleRegion().latLngBounds;
 
-            latitude = Double.parseDouble(line[2]);
-            longitude = Double.parseDouble(line[1]);
-            towerType = String.valueOf(line[0]);
-            Toast.makeText(getApplicationContext(),towerType,Toast.LENGTH_LONG).show();
-            if(towerType.equals("GSM"))
-            {
-                Toast.makeText(getApplicationContext(),"INSIDE",Toast.LENGTH_LONG).show();
-                positionSite(new LatLng(latitude, longitude),towerType);
+            int flag = 0;
+            double rightCoordinates = curScreen.northeast.longitude;
+            double leftCoordinates = curScreen.southwest.longitude;
+            double topCoordinates = curScreen.northeast.latitude;
+            double bottomCoordinates = curScreen.southwest.latitude;
+
+            while ((info = reader.readLine()) != null) {
+                String[] line = info.split(",");
+
+                latitude = Double.parseDouble(line[2]);
+                longitude = Double.parseDouble(line[1]);
+                towerType = String.valueOf(line[0]);
+
+                if (latitude > bottomCoordinates &&
+                        latitude < topCoordinates &&
+                        longitude > leftCoordinates &&
+                        longitude < rightCoordinates) {
+
+                    LatLng latLng = new LatLng(latitude, longitude);
+                    point.add(latLng);
+                    positionSite(new LatLng(latitude, longitude), towerType);
+                }
+                flag++;
             }
-            flag++;
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
-
-
-    }
-    catch (Exception e){
-            Log.d("Exception", e.toString());
-    }
     }
 
+    public boolean positionSite(LatLng towerLatLong, String siteName) {
 
-    public void positionSite(LatLng towerLatLong, String siteName) {
-        MarkerOptions options = new MarkerOptions()
-                .title(siteName)
-                .position(towerLatLong);
-
-
+        for (int i = 0; i < point.size(); i++) {
+            LatLng element = point.get(i);
+            if (element == towerLatLong) {
+                return false;
+            } else {
+                continue;
+            }
+        }
+        MarkerOptions options = null;
+        switch (siteName) {
+            case "GSM":
+                options = new MarkerOptions()
+                        .title(siteName)
+                        .position(towerLatLong)
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                break;
+            case "LTE":
+                options = new MarkerOptions()
+                        .title(siteName)
+                        .position(towerLatLong)
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                break;
+            case "UMTS":
+                options = new MarkerOptions()
+                        .title(siteName)
+                        .position(towerLatLong)
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW));
+                break;
+        }
         mMap.addMarker(options);
-
+        return true;
     }
-
 }

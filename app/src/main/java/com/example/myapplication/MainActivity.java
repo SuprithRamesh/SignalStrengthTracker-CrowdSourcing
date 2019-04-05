@@ -57,8 +57,8 @@ public class MainActivity extends AppCompatActivity {
     final Runnable updater = new Runnable() {
 
         public void start() {
-            if( t == null ) {
-                t = new Thread( this );
+            if (t == null) {
+                t = new Thread(this);
                 t.start();
             }
         }
@@ -111,8 +111,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-
-
     @Override
     protected void onPause() {
         super.onPause();
@@ -129,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
                                 Thread.sleep(1000);
                                 Log.i("Noise", "Tock");
                             } catch (InterruptedException e) {
-                                Toast.makeText(getApplicationContext(),e.toString(), Toast.LENGTH_LONG).show();
+                                Toast.makeText(getApplicationContext(), e.toString(), Toast.LENGTH_LONG).show();
                             }
                             mHandler.post(updater);
                         }
@@ -140,153 +138,147 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("Noise", "start running_thread()");
 
             }
-            if(t.isAlive())
-            {
+            if (t.isAlive()) {
                 getReadings();
-            }
-            else
-            {
+            } else {
                 t.start();
                 getReadings();
             }
 
 
-
         } catch (Exception e) {
-            Toast.makeText(getApplicationContext(),e.toString(),Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), e.toString(), Toast.LENGTH_LONG).show();
         }
     }
 
     public void stopRecorder() {
-        if(t!=null)
-        {
-            finish();
+        if (t != null) {
+            t.interrupt();
         }
 
     }
 
-        public void getReadings()
-        {
-            Criteria criteria = new Criteria();
-            criteria.setAccuracy(Criteria.ACCURACY_FINE);
+    public void getReadings() {
+        Criteria criteria = new Criteria();
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
 
-            LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                return;
-            }
-            lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 30000, 5000, locationListener);
+        LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 30000, 5000, locationListener);
 
-            TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                signalStrength = telephonyManager.getSignalStrength();
-            }
-            assert signalStrength != null;
-            String signalStrengthString = signalStrength.toString();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            signalStrength = telephonyManager.getSignalStrength();
+        }
+        assert signalStrength != null;
+        String signalStrengthString = signalStrength.toString();
 
-            String[] parts = signalStrengthString.split(" ");
+        String[] parts = signalStrengthString.split(" ");
 
 
-            if (telephonyManager.getNetworkType() == TelephonyManager.NETWORK_TYPE_LTE) {
+        if (telephonyManager.getNetworkType() == TelephonyManager.NETWORK_TYPE_LTE) {
 
-                // For Lte SignalStrength: dbm = ASU - 140.
-                dbm = Integer.parseInt(parts[8]) - 140;
+            // For Lte SignalStrength: dbm = ASU - 140.
+            dbm = Integer.parseInt(parts[8]) - 140;
 
-            } else {
+        } else {
 
-                // For GSM Signal Strength: dbm =  (2*ASU)-113.
-                if (signalStrength.getGsmSignalStrength() != 99) {
-                    dbm = -113 + 2 * signalStrength.getGsmSignalStrength();
+            // For GSM Signal Strength: dbm =  (2*ASU)-113.
+            if (signalStrength.getGsmSignalStrength() != 99) {
+                dbm = -113 + 2 * signalStrength.getGsmSignalStrength();
 
-                }
             }
         }
+    }
 
-        public void updateTextView () {
-            if (!file.exists()) {
-                try {
-                    //noinspection ResultOfMethodCallIgnored
-                    file.createNewFile();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+    public void updateTextView() {
+        if (!file.exists()) {
             try {
-                FileWriter fileWriter = new FileWriter(file);
-                BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-                //noinspection StringConcatenationInsideStringBufferAppend
-                bufferedWriter.append(String.valueOf(longitude) + "," + String.valueOf(latitude) + "," + dbm);
-                bufferedWriter.newLine();
-                bufferedWriter.close();
-
-                try {
-                    FileReader fr = new FileReader(file);
-                    reader = new BufferedReader(fr);
-
-                    // do reading, usually loop until end of file reading
-                    String mLine;
-                    while ((mLine = reader.readLine()) != null) {
-                        text.append(mLine);
-                        text.append('\n');
-                    }
-                } catch (IOException e) {
-                    Toast.makeText(getApplicationContext(), "Error reading file!", Toast.LENGTH_LONG).show();
-                    e.printStackTrace();
-                } finally {
-                    if (reader != null) {
-                        try {
-                            reader.close();
-                        } catch (IOException e) {
-                            //log the exception
-                        }
-                    }
-
-                    FirebaseApp.initializeApp(MainActivity.this);
-                    DatabaseReference mDatabase;
-                    mDatabase = FirebaseDatabase.getInstance().getReference();
-
-                    if (latitude != 0 && longitude != 0) {
-                        //Show the values in text field
-                        textView.setText(text);
-
-                        //Push to Server
-                        Map<String, Number> dbValuesHash = new HashMap<>();
-                        dbValuesHash.put("latitude", latitude);
-                        dbValuesHash.put("longitude", longitude);
-                        dbValuesHash.put("dbm", dbm);
-
-                        mDatabase.push().setValue(dbValuesHash);
-                    }
-                }
-            } catch (Exception e) {
+                //noinspection ResultOfMethodCallIgnored
+                file.createNewFile();
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        try {
+            FileWriter fileWriter = new FileWriter(file);
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+            //noinspection StringConcatenationInsideStringBufferAppend
+            bufferedWriter.append(String.valueOf(longitude) + "," + String.valueOf(latitude) + "," + dbm);
+            bufferedWriter.newLine();
+            bufferedWriter.close();
 
-        // Define a listener that responds to location updates
-        LocationListener locationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-                // Called when a new location is found by the network location
-                // provider.
-                longitude = location.getLongitude();
-                latitude = location.getLatitude();
+            try {
+                FileReader fr = new FileReader(file);
+                reader = new BufferedReader(fr);
 
-                Log.e("LONG", longitude + "");
-                Log.e("LAT", latitude + "");
+                // do reading, usually loop until end of file reading
+                String mLine;
+                while ((mLine = reader.readLine()) != null) {
+                    text.append(mLine);
+                    text.append('\n');
+                }
+            } catch (IOException e) {
+                Toast.makeText(getApplicationContext(), "Error reading file!", Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            } finally {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (IOException e) {
+                        //log the exception
+                    }
+                }
+
+                FirebaseApp.initializeApp(MainActivity.this);
+                DatabaseReference mDatabase;
+                mDatabase = FirebaseDatabase.getInstance().getReference();
+
+                if (latitude != 0 && longitude != 0) {
+                    //Show the values in text field
+                    textView.setText(text);
+
+                    //Push to Server
+                    Map<String, Number> dbValuesHash = new HashMap<>();
+                    dbValuesHash.put("latitude", latitude);
+                    dbValuesHash.put("longitude", longitude);
+                    dbValuesHash.put("dbm", dbm);
+
+                    mDatabase.push().setValue(dbValuesHash);
+                }
             }
-
-            public void onStatusChanged(String provider, int status,
-                                        Bundle extras) {
-            }
-
-            public void onProviderEnabled(String provider) {
-            }
-
-            public void onProviderDisabled(String provider) {
-            }
-        };
-
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+
+    // Define a listener that responds to location updates
+    LocationListener locationListener = new LocationListener() {
+        public void onLocationChanged(Location location) {
+            // Called when a new location is found by the network location
+            // provider.
+            longitude = location.getLongitude();
+            latitude = location.getLatitude();
+
+            Log.e("LONG", longitude + "");
+            Log.e("LAT", latitude + "");
+        }
+
+        public void onStatusChanged(String provider, int status,
+                                    Bundle extras) {
+        }
+
+        public void onProviderEnabled(String provider) {
+        }
+
+        public void onProviderDisabled(String provider) {
+        }
+    };
+
+}
 
 
 
