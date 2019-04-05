@@ -155,7 +155,6 @@ public class MainActivity extends AppCompatActivity {
         if (t != null) {
             t.interrupt();
         }
-
     }
 
     public void getReadings() {
@@ -163,9 +162,11 @@ public class MainActivity extends AppCompatActivity {
         criteria.setAccuracy(Criteria.ACCURACY_FINE);
 
         LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
+
         lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 30000, 5000, locationListener);
 
         TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
@@ -173,23 +174,20 @@ public class MainActivity extends AppCompatActivity {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
             signalStrength = telephonyManager.getSignalStrength();
         }
+
         assert signalStrength != null;
+
         String signalStrengthString = signalStrength.toString();
 
         String[] parts = signalStrengthString.split(" ");
 
-
         if (telephonyManager.getNetworkType() == TelephonyManager.NETWORK_TYPE_LTE) {
-
             // For Lte SignalStrength: dbm = ASU - 140.
             dbm = Integer.parseInt(parts[8]) - 140;
-
         } else {
-
             // For GSM Signal Strength: dbm =  (2*ASU)-113.
             if (signalStrength.getGsmSignalStrength() != 99) {
                 dbm = -113 + 2 * signalStrength.getGsmSignalStrength();
-
             }
         }
     }

@@ -324,6 +324,24 @@ public class MapsActivity extends FragmentActivity
 
     public void plotCellTower() {
         try {
+            LatLngBounds curScreen = mMap.getProjection()
+                    .getVisibleRegion().latLngBounds;
+
+            double rightCoordinates = curScreen.northeast.longitude;
+            double leftCoordinates = curScreen.southwest.longitude;
+            double topCoordinates = curScreen.northeast.latitude;
+            double bottomCoordinates = curScreen.southwest.latitude;
+
+            //Contacting OpenCellID for data - Make sure the boundaries of map are small
+            //The response saves the file to assets folder
+            new RequestResponseToOpenCellID(MapsActivity.this)
+                    .execute("http://www.opencellid.org/cell/getInArea?key=671bf1003abf99&BBOX=" +
+                            bottomCoordinates + "," +
+                            leftCoordinates + "," +
+                            topCoordinates + "," +
+                            rightCoordinates + "" +
+                            "&format=csv");
+
             InputStreamReader is = new InputStreamReader(getAssets().open("DublinTowers.csv"));
             BufferedReader reader = new BufferedReader(is);
 
@@ -335,20 +353,13 @@ public class MapsActivity extends FragmentActivity
             String towerType = null;
             String info = "";
 
-            LatLngBounds curScreen = mMap.getProjection()
-                    .getVisibleRegion().latLngBounds;
-
             int flag = 0;
-            double rightCoordinates = curScreen.northeast.longitude;
-            double leftCoordinates = curScreen.southwest.longitude;
-            double topCoordinates = curScreen.northeast.latitude;
-            double bottomCoordinates = curScreen.southwest.latitude;
 
             while ((info = reader.readLine()) != null) {
                 String[] line = info.split(",");
 
-                latitude = Double.parseDouble(line[2]);
-                longitude = Double.parseDouble(line[1]);
+                latitude = Double.parseDouble(line[7]);
+                longitude = Double.parseDouble(line[6]);
                 towerType = String.valueOf(line[0]);
 
                 if (latitude > bottomCoordinates &&
